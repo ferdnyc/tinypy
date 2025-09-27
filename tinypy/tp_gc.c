@@ -21,6 +21,11 @@
 #define TP_GC_TRACE 0
 #define TP_GC_ASSERT_LISTS_ARE_DISJOINT 0    /* Assert no white object is on the black list. Very slow. */
 
+#define TP_GC_DEBUG_MARKING 1
+
+/* Maximum number of objects to collect per partial GC run. */
+#define TP_GC_STEP_MAX 8
+
 /* tp_grey: ensure an object to the grey list, if the object is already
  * marked grey, then do nothing. */
 void tp_grey(TP, tp_obj v) {
@@ -197,6 +202,12 @@ void tp_collect(TP) {
 }
 
 void tp_mark(TP, int max) {
+    #if TP_GC_DEBUG_MARKING
+        printf(
+            "GC: Coloring objects, %d out of %d to mark\n",
+            max, tp->grey->len
+        );
+    #endif
     while (tp->grey->len && max > 0) {
         tp_obj v;
         /* pick a grey object */
@@ -216,6 +227,9 @@ void tp_mark(TP, int max) {
         tp_follow(tp,v);
         if(max > 0) max--;
     }
+    #if TP_GC_DEBUG_MARKING
+        printf("GC complete, %d items remaining\n", tp->grey->len);
+    #endif
 }
 
 void tp_gc_dump(TP, tpd_list * l, int name, int mark) {
@@ -242,10 +256,16 @@ void tp_gc_dump(TP, tpd_list * l, int name, int mark) {
 
 void tp_gc_run(TP, int full) {
     if (full || tp->gcmax == 0 || (tp->steps % tp->gcmax == 0)) {
+        #if TP_GC_DEBUG_MARKING
+            printf("Running full GC\n");
+        #endif
         tp_mark(tp, -1);
     } else {
-        /* mark 2 items from the grey list every step */
-        tp_mark(tp, 8);
+        /* mark a fixed number of items from the grey list every step */
+        #if TP_GC_DEBUG_MARKING
+            printf("Running partial GC of up to %d items\n", TP_GC_STEP_MAX);
+        #endif
+        tp_mark(tp, TP_GC_STEP_MAX);
     }
 
     /* grey list is empty, we can run a collection */
@@ -286,4 +306,3 @@ void tp_gc_deinit(TP) {
 
 
 /**/
-
