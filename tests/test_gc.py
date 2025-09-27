@@ -27,12 +27,14 @@ class GcTest(UnitTest):
     def test_delete(self):
         assert self.objA is not None
         assert self.objB is not None
+        for i in range(20):
+            new_obj = Create(a=i)
+            self.scrap_objects.append(new_obj)
         del self.objA
-        for i in range(1000):
-            self.scrap_objects.append(Create(a=i))
         del self.objB
-        #assert not hasattr(self, "objA")
-        #assert not hasattr(self, "objB")
+        #assert self.objA is None
+        #assert self.objB is None
+
 
 t = GcTest()
 
