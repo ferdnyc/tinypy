@@ -137,11 +137,11 @@ void re_compile_fastmap(regexp_t compiled);
 extern int re_syntax;
 extern unsigned char re_syntax_table[256];
 void re_compile_initialize();
-int re_set_syntax();
-char *re_compile_pattern();
-int re_match();
-int re_search();
-void re_compile_fastmap();
+int re_set_syntax(int);
+char *re_compile_pattern(unsigned char*, int, regexp_t);
+int re_match(regexp_t, unsigned char*, int, int, regexp_registers_t);
+int re_search(regexp_t, unsigned char*, int, int, int, regexp_registers_t);
+void re_compile_fastmap(regexp_t);
 
 #endif /* HAVE_PROTOTYPES */
 
