@@ -21,10 +21,14 @@
 #define TP_GC_TRACE 0
 #define TP_GC_ASSERT_LISTS_ARE_DISJOINT 0    /* Assert no white object is on the black list. Very slow. */
 
-#define TP_GC_DEBUG_MARKING 1
-
 /* Maximum number of objects to collect per partial GC run. */
 #define TP_GC_STEP_MAX 8
+
+/* Macros for min/max, borrowed from glibc sys/param.h */
+#ifndef MAX
+#define MIN(a,b) (((a)<(b))?(a):(b))
+#define MAX(a,b) (((a)>(b))?(a):(b))
+#endif
 
 /* tp_grey: ensure an object to the grey list, if the object is already
  * marked grey, then do nothing. */
@@ -201,14 +205,14 @@ void tp_collect(TP) {
     tp->black->len = 0;
 }
 
-void tp_mark(TP, int max) {
-    #if TP_GC_DEBUG_MARKING
-        printf(
-            "GC: Coloring objects, %d out of %d to mark\n",
-            max, tp->grey->len
-        );
-    #endif
-    while (tp->grey->len && max > 0) {
+void tp_mark(TP, int gc_max) {
+    int target_len = gc_max > 0 ? MAX(0, tp->grey->len - gc_max) : 0;
+    DEBUG_PRINTF(
+        "GC: Coloring objects, %d out of %d to mark\n",
+        tp->grey->len - target_len, tp->grey->len
+    );
+
+    while (tp->grey->len > target_len) {
         tp_obj v;
         /* pick a grey object */
         v = tpd_list_pop(tp, tp->grey, tp->grey->len-1, "_tp_gcinc");
@@ -225,11 +229,8 @@ void tp_mark(TP, int max) {
 
         /* put children to grey. */
         tp_follow(tp,v);
-        if(max > 0) max--;
     }
-    #if TP_GC_DEBUG_MARKING
-        printf("GC complete, %d items remaining\n", tp->grey->len);
-    #endif
+    DEBUG_PRINTF("GC complete, %d items remaining\n", tp->grey->len);
 }
 
 void tp_gc_dump(TP, tpd_list * l, int name, int mark) {
@@ -256,15 +257,11 @@ void tp_gc_dump(TP, tpd_list * l, int name, int mark) {
 
 void tp_gc_run(TP, int full) {
     if (full || tp->gcmax == 0 || (tp->steps % tp->gcmax == 0)) {
-        #if TP_GC_DEBUG_MARKING
-            printf("Running full GC\n");
-        #endif
+        DEBUG_PRINTF("Running full GC\n");
         tp_mark(tp, -1);
     } else {
         /* mark a fixed number of items from the grey list every step */
-        #if TP_GC_DEBUG_MARKING
-            printf("Running partial GC of up to %d items\n", TP_GC_STEP_MAX);
-        #endif
+        DEBUG_PRINTF("Running partial GC of up to %d items\n", TP_GC_STEP_MAX);
         tp_mark(tp, TP_GC_STEP_MAX);
     }
 
