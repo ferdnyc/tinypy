@@ -44,7 +44,7 @@ TESTS_PY_FILES=$(wildcard tests/*.py)
 # rule to make objects for static linkage
 .objs/%.o : %.c
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -g -O0 -I . -c -o $@ $<
+	$(CC) $(CFLAGS) -DNDEBUG -g -O0 -I . -c -o $@ $<
 
 .dbgobjs/%.o : %.c
 	@mkdir -p $(dir $@)
@@ -53,7 +53,7 @@ TESTS_PY_FILES=$(wildcard tests/*.py)
 # rule to make objects for dynamic linkage
 .dynobjs/%.o : %.c
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -fPIC -g -O0 -I . -c -o $@ $<
+	$(CC) $(CFLAGS) -DNDEBUG -fPIC -g -O0 -I . -c -o $@ $<
 
 
 all: tpy tpvm
@@ -97,7 +97,7 @@ GENERATED_SOURCE_FILES+=tinypy/tp_opcodes.h
 
 # tpvm only takes compiled byte codes (.tpc files)
 tpvm : $(VMLIB_FILES:%.c=.objs/tinypy/%.o) .objs/tinypy/vmmain.o modules/modules.a
-	$(CC) $(CFLAGS) -g -O0 -o $@ $^ -lm
+	$(CC) $(CFLAGS) -DNDEBUG -g -O0 -o $@ $^ -lm
 #
 # tpvm only takes compiled byte codes (.tpc files)
 tpvm-dbg : $(VMLIB_FILES:%.c=.dbgobjs/tinypy/%.o) .dbgobjs/tinypy/vmmain.o modules/modules.a
@@ -105,7 +105,7 @@ tpvm-dbg : $(VMLIB_FILES:%.c=.dbgobjs/tinypy/%.o) .dbgobjs/tinypy/vmmain.o modul
 
 # tpy takes .py files
 tpy : $(TPLIB_FILES:%.c=.objs/tinypy/%.o) .objs/tinypy/tpmain.o modules/modules.a
-	$(CC) $(CFLAGS) -o $@ $^ -lm
+	$(CC) $(CFLAGS) -DNDEBUG -o $@ $^ -lm
 
 # tpy takes .py files
 tpy-dbg : $(TPLIB_FILES:%.c=.dbgobjs/tinypy/%.o) .dbgobjs/tinypy/tpmain.o modules/modules.a

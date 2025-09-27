@@ -25,3 +25,11 @@ tp_inline static tpd_frame * tp_get_cur_frame(TP) { return tp_get_frame(tp, tp->
 
 /* Detect unintended size changes. Update as needed. */
 STATIC_ASSERT(sizeof(tpd_code) == 4, "size of tpd_code must be 4");
+
+#ifndef DEBUG_PRINTF
+#ifdef NDEBUG
+#define DEBUG_PRINTF(...) {0;}
+#else
+#define DEBUG_PRINTF(...) fprintf(stderr, __VA_ARGS__)
+#endif
+#endif
